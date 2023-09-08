@@ -5,17 +5,33 @@ Allows you to save & restore kitty sessions, with all kitty OS windows, kitty ta
 
 Doesn't restore OS window sizes. See here for https://github.com/dflock/window-workspace-save-restore[Window Workspace Placement Save & Restore].
 
+Modifications by RanzQ:
+
+  * Add shell scripts
+  * Fix cd for windows
+  * Automatic titles from cd
+  * Launch shell only
+
 ## Requirements
 
 Requires python 3 and https://sw.kovidgoyal.net/kitty/[kitty].
 
 ## Usage
 
+Link dump and restore scripts to bin:
+```shell
+ln -s /home/<user>/kitty-save-session/kitty-dump.sh .local/bin/kitty-dump
+ln -s /home/<user>/kitty-save-session/kitty-restore.sh .local/bin/kitty-restore
+```
+
+Modify kitty.desktop to use single instance (this allows kitty-restore && exit)
+```shell
+Exec=sh -c "/home/<user>/.local/kitty.app/bin/kitty --single-instance"
+```
+
 ```shell
 # Dump the current kitty session:
-$ kitty @ ls > kitty-dump.json
-# Convert this JSON file into a kitty session file:
-$ cat kitty-dump.json | python3 ./kitty-convert-dump.py > kitty-session.kitty
-# Start kitty from that session file:
-$ kitty --session kitty-session.kitty
+kitty-dump
+# Restore the session (and exit current kitty):
+kitty-restore && exit
 ```

@@ -7,6 +7,7 @@ import json
 import os
 import sys
 
+SHELL = os.getenv("SHELL")
 
 def env_to_str(env):
     """Convert an env list to a series of '--env key=value' parameters and return as a string."""
@@ -29,13 +30,17 @@ def cmdline_to_str(cmdline):
 def fg_proc_to_str(fg):
     """Convert a foreground_processes list to a space separated string."""
     s = ""
-    fg = fg[0]
 
-    # s += f"--cwd {fg['cwd']} {cmdline_to_str(fg['cmdline'])}"
-    s += f"{cmdline_to_str(fg['cmdline'])}"
+    if len(fg) < 1:
+        return s
 
-    if s == "kitty @ ls":
-        return os.getenv("SHELL")
+    first_process = fg[0]
+
+    s += f"{cmdline_to_str(first_process['cmdline'])}"
+
+    # avoid re-launching kitty or kitty controls (like kitty-dump.sh or kitty @ ls)
+    if 'kitty' in s:
+        return SHELL
     return s
 
 
@@ -46,22 +51,16 @@ def convert(session):
         if first:
             first = False
         else:
-            print("\nnew_os_window\n")
+            print("\nnew_os_window")
 
         for tab in os_window["tabs"]:
-            print("\n")
-            print(f"new_tab {tab['title']}")
-            # print('enabled_layouts *)
+            print("\nnew_tab")
             print(f"layout {tab['layout']}")
-            # This is a bit of a kludge to set cwd for the tab, as
-            # setting it in the launch command didn't work, for some reason?
-            if tab["windows"]:
-                print(f"cd {tab['windows'][0]['cwd']}")
 
             for w in tab["windows"]:
-                print(f"title {w['title']}")
+                print(f"cd {w['cwd']}")
                 print(
-                    f"launch {env_to_str(w['env'])} {fg_proc_to_str(w['foreground_processes'])}"
+                    f"launch {SHELL}"
                 )
                 if w["is_focused"]:
                     print("focus")
@@ -71,3 +70,4 @@ if __name__ == "__main__":
     stdin = sys.stdin.readlines()
     session = json.loads("".join(stdin))
     convert(session)
+
